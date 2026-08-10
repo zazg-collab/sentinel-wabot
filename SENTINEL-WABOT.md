@@ -46,6 +46,48 @@ Ini bukan kelalaian — mengubahnya justru merusak:
   berarti membongkar rantai migrasi Prisma tanpa manfaat.
 - `docs/superpowers/**` → dokumen desain historis, dibiarkan utuh sebagai arsip.
 
+## Bukti pemisahan Docker — diadu langsung dengan `hermes_repo`
+
+Dibaca langsung dari `hermes_repo/docker-compose*.yml` pada 2026-08-10 (**baca saja, nol
+perubahan di sana**). Nol irisan di semua sumbu:
+
+| Sumbu | `hermes_repo` | `sentinel_wabot` |
+|---|---|---|
+| Nama projek Compose | `hermes_repo` (implisit dari nama folder) | `sentinel-wabot` (**eksplisit** lewat `name:`) |
+| Web | 3000 | **3500** |
+| API | 3001 | **3501** |
+| Postgres | 5433 | **3502** |
+| Redis | 6379 → 6380 (override) | **3503** |
+| Nginx | 80 | **3580** |
+| Prometheus | 9090 | **3590** |
+| Alertmanager | 9093 | **3593** |
+| Container | `hermes-*` | `sentinel-wabot-*` |
+| Network | `hermes` | `sentinel_wabot` |
+| Volume | `hermes_pgdata/redisdata/sessions/media/prometheus_data` | `wabot_*` |
+| DB user/db | `hermes` | `wabot` |
+
+Karena nama projek Compose berbeda, `docker compose down -v` di salah satu projek **tidak
+bisa** menyentuh volume projek yang lain. Keduanya boleh menyala berbarengan.
+
+## Login
+
+Kredensial owner sudah ditulis ke `.env` (di-gitignore, mode 600) — **tidak ikut ke GitHub**.
+Akun terbentuk saat `npm run db:seed` dijalankan pertama kali di database yang masih kosong.
+
+> **Jebakan yang perlu diingat**: `seed.js` memakai `upsert` dengan `update: {}`. Artinya kalau
+> user dengan email itu **sudah ada**, seed ulang **tidak** mengganti passwordnya. Mau ganti
+> password nanti? Lewat UI, atau hapus dulu barisnya di tabel `users`.
+
+## Catatan operasional — jangan jalankan `git` dari sesi Cowork
+
+Folder ini di-mount ke sesi Cowork lewat jembatan device, dan mount itu **tidak mengizinkan
+unlink**. Akibatnya `git commit` di sana berhasil menulis commit tapi meninggalkan
+`.git/HEAD.lock`, `.git/index.lock`, dan `tmp_obj_*` yang tak terhapus — operasi git
+berikutnya langsung mati dengan *"Another git process seems to be running"*.
+
+**Jalankan semua perintah git untuk repo ini dari Terminal macOS langsung.** Kalau terlanjur
+macet, hapus manual: `rm -f .git/*.lock .git/objects/*/tmp_obj_* .git/objects/maintenance.lock`.
+
 ## Yang belum diverifikasi (jujur, jangan dianggap hijau)
 
 - **Belum pernah di-build atau dijalankan.** Belum `npm install`, belum `tsc`, belum
@@ -61,7 +103,7 @@ Ini bukan kelalaian — mengubahnya justru merusak:
 
 ```bash
 cd sentinel_wabot
-cp .env.example .env          # isi JWT_SECRET (openssl rand -base64 48) + AI_API_KEY
+# .env sudah disiapkan (JWT_SECRET acak + kredensial owner). Tinggal isi AI_API_KEY.
 npm install
 docker compose up -d postgres redis
 npm run dev:api               # http://localhost:3501/api/v1
