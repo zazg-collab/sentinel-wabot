@@ -1,0 +1,48 @@
+name: sentinel-wabot
+
+# Optional observability stack. Run alongside the main stack with:
+#   docker compose -f docker-compose.yml -f docker-compose.monitoring.yml --profile monitoring up -d
+#
+# monitoring/alertmanager.yml references ${ALERTMANAGER_WEBHOOK_TOKEN} — set it
+# in .env (same value as ALERTMANAGER_WEBHOOK_TOKEN consumed by the api service)
+# and substitute it into the mounted file before starting Alertmanager, e.g.:
+#   envsubst < monitoring/alertmanager.yml > monitoring/alertmanager.rendered.yml
+# Alertmanager itself does not interpolate ${VAR} at runtime.
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sentinel-wabot-prometheus
+    profiles:
+      - monitoring
+    ports:
+      - "127.0.0.1:3590:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - wabot_prometheus_data:/prometheus
+    networks:
+      - sentinel_wabot
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: sentinel-wabot-alertmanager
+    profiles:
+      - monitoring
+    ports:
+      - "127.0.0.1:3593:9093"
+    volumes:
+      - ./monitoring/alertmanager.rendered.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks:
+      - sentinel_wabot
+    restart: unless-stopped
+
+networks:
+  sentinel_wabot:
+    external: false
+
+volumes:
+  wabot_prometheus_data:

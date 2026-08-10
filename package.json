@@ -1,0 +1,89 @@
+{
+  "name": "sentinel-wabot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hermes AI Sales & Customer Service Control Center — Multi-account WhatsApp AI chatbots with Hermes supervisor",
+  "license": "MIT",
+  "author": "filmdown526-ux",
+  "homepage": "https://github.com/filmdown526-ux/AI-WhatsApp-CS-Sales-Multi-Account#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/filmdown526-ux/AI-WhatsApp-CS-Sales-Multi-Account.git"
+  },
+  "bugs": {
+    "url": "https://github.com/filmdown526-ux/AI-WhatsApp-CS-Sales-Multi-Account/issues"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/filmdown526-ux"
+  },
+  "keywords": [
+    "whatsapp",
+    "chatbot",
+    "ai",
+    "customer-service",
+    "sales",
+    "baileys",
+    "nestjs",
+    "nextjs",
+    "prisma",
+    "multi-tenant"
+  ],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run start:dev --workspace=@sentinel/api",
+    "dev:web": "npm run dev --workspace=@sentinel/web",
+    "build": "npm run build --workspaces --if-present",
+    "heroku-postbuild": "npm run db:generate && npm run build --workspace=@sentinel/api",
+    "postinstall": "node scripts/postinstall.js",
+    "start": "node apps/api/dist/main.js",
+    "lint": "npm run lint --workspaces --if-present",
+    "db:generate": "npm run generate --workspace=@sentinel/database",
+    "db:migrate": "npm run migrate --workspace=@sentinel/database",
+    "db:seed": "npm run seed --workspace=@sentinel/database",
+    "kb:reindex": "npm run kb:reindex --workspace=@sentinel/api",
+    "test": "node scripts/qa-check.mjs",
+    "prepare": "husky install"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@nestjs/bullmq": "^11.0.4",
+    "bullmq": "^5.78.0",
+    "headroom-ai": "^0.22.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^17.6.0",
+    "typescript-eslint": "^8.61.0",
+    "husky": "^9.1.6",
+    "semantic-release": "^24.1.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^10.3.5",
+    "@semantic-release/npm": "^12.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.3"
+  },
+  "overrides": {
+    "reflect-metadata": "0.1.14"
+  },
+  "release": {
+    "branches": ["master", "main"],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/github",
+      "@semantic-release/git"
+    ],
+    "changelog": "CHANGELOG.md"
+  }
+}
